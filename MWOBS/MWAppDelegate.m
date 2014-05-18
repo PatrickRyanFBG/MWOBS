@@ -8,16 +8,12 @@
 
 #import "MWAppDelegate.h"
 
+extern bool notify;
+extern int hour;
+extern int minute;
+
 @implementation MWAppDelegate
 
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
-{
-    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-    // Override point for customization after application launch.
-    self.window.backgroundColor = [UIColor whiteColor];
-    [self.window makeKeyAndVisible];
-    return YES;
-}
 
 - (void)applicationWillResignActive:(UIApplication *)application
 {
@@ -29,6 +25,41 @@
 {
     // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later. 
     // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+    
+    if (notify)
+    {
+        NSCalendar *calendar = [NSCalendar currentCalendar];
+        NSTimeZone *timeZone = [NSTimeZone systemTimeZone];
+        [calendar setTimeZone:timeZone];
+        
+        NSDate *now = [NSDate date];
+        
+        // Selectively convert the date components (year, month, day) of the input date
+        NSDateComponents *dateComps = [calendar components:NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit | NSHourCalendarUnit | NSMinuteCalendarUnit fromDate:now];
+        
+        // Set to next day only if passed 8am.
+        if (dateComps.hour >= hour)
+        {
+            int daysToAdd = 0;
+            NSDate *newDate1 = [now dateByAddingTimeInterval:60*60*24*daysToAdd];
+            dateComps = [calendar components:NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit  fromDate:newDate1];
+        }
+        
+        // Set the time components manually
+        [dateComps setHour:hour];
+        [dateComps setMinute:minute];
+        [dateComps setSecond:0];
+        
+        NSLog(@"%d %d", hour, minute);
+        
+        // Convert back
+        NSDate *day = [calendar dateFromComponents:dateComps];
+        
+        UILocalNotification *notification = [[UILocalNotification alloc] init];
+        notification.fireDate = [day dateByAddingTimeInterval:0];
+        notification.alertBody = @"Make sure to check the weather!";
+        [[UIApplication sharedApplication] scheduleLocalNotification:notification];
+    }
 }
 
 - (void)applicationWillEnterForeground:(UIApplication *)application
@@ -39,6 +70,8 @@
 - (void)applicationDidBecomeActive:(UIApplication *)application
 {
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+    
+    [[UIApplication sharedApplication] cancelAllLocalNotifications];
 }
 
 - (void)applicationWillTerminate:(UIApplication *)application

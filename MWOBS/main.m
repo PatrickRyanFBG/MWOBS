@@ -10,6 +10,10 @@
 
 #import "MWAppDelegate.h"
 
+int hour = 8;
+int minute = 0;
+bool notify = true;
+
 int main(int argc, char * argv[])
 {
     @autoreleasepool {
